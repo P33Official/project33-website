@@ -2,6 +2,9 @@
   "use strict";
 
   const config = window.PROJECT33_CONFIG || {};
+  const FOUNDING_MEMBER_ENDPOINT =
+    "https://project33-discord-counter.project33hq.workers.dev/founding-members";
+  const FOUNDING_MEMBER_CACHE_KEY = "project33FoundingMemberCount";
   const $ = (selector, context = document) => context.querySelector(selector);
   const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
 
@@ -52,20 +55,117 @@
   $("#supply-value").textContent = config.totalSupply || "TO BE ANNOUNCED";
   $("#contract-value").textContent = config.contractAddress || "NOT DEPLOYED";
 
-  // Founding-member progress
-  const memberCount = Math.max(0, Number(config.currentMembers) || 0);
-  const memberGoal = Math.max(1, Number(config.memberGoal) || 333);
-  const memberPercent = Math.min(100, (memberCount / memberGoal) * 100);
-
-  $("#member-count").textContent = memberCount.toLocaleString();
-  $("#member-goal").textContent = memberGoal.toLocaleString();
-  $("#progress-fill").style.width = `${memberPercent}%`;
-
+  // Live Founding Member count from the official Project 33 Discord.
+  // config.currentMembers remains a safe fallback if the Worker is unavailable.
+  const memberCountElement = $("#member-count");
+  const memberGoalElement = $("#member-goal");
+  const progressFill = $("#progress-fill");
   const progress = $(".progress-track");
-  if (progress) {
-    progress.setAttribute("aria-valuemax", String(memberGoal));
-    progress.setAttribute("aria-valuenow", String(memberCount));
+  const fallbackMemberCount = Math.max(0, Number(config.currentMembers) || 0);
+  const memberGoal = Math.max(1, Number(config.memberGoal) || 333);
+
+  function renderMemberCount(count, source = "fallback") {
+    const normalizedCount = Math.max(0, Number(count) || 0);
+    const memberPercent = Math.min(100, (normalizedCount / memberGoal) * 100);
+
+    if (memberCountElement) {
+      memberCountElement.textContent = normalizedCount.toLocaleString();
+      memberCountElement.dataset.source = source;
+      memberCountElement.title =
+        source === "live"
+          ? "Live count from the official Project 33 Discord"
+          : source === "cached"
+            ? "Last verified count from the official Project 33 Discord"
+            : "Configured fallback count";
+    }
+
+    if (memberGoalElement) {
+      memberGoalElement.textContent = memberGoal.toLocaleString();
+    }
+
+    if (progressFill) {
+      progressFill.style.width = `${memberPercent}%`;
+    }
+
+    if (progress) {
+      progress.setAttribute("aria-valuemax", String(memberGoal));
+      progress.setAttribute("aria-valuenow", String(normalizedCount));
+      progress.setAttribute(
+        "aria-label",
+        `${normalizedCount.toLocaleString()} of ${memberGoal.toLocaleString()} founding members`
+      );
+      progress.setAttribute("aria-busy", source === "loading" ? "true" : "false");
+    }
   }
+
+  function restoreCachedMemberCount() {
+    try {
+      const cachedValue = localStorage.getItem(FOUNDING_MEMBER_CACHE_KEY);
+      if (!cachedValue) return false;
+
+      const cached = JSON.parse(cachedValue);
+      if (!Number.isInteger(cached.count) || cached.count < 0) return false;
+
+      renderMemberCount(cached.count, "cached");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function updateFoundingMemberCount() {
+    if (!memberCountElement) return;
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const response = await fetch(FOUNDING_MEMBER_ENDPOINT, {
+        method: "GET",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Counter request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!Number.isInteger(data.count) || data.count < 0) {
+        throw new Error("The counter returned an invalid member count");
+      }
+
+      renderMemberCount(data.count, "live");
+      localStorage.setItem(
+        FOUNDING_MEMBER_CACHE_KEY,
+        JSON.stringify({
+          count: data.count,
+          updatedAt: data.updatedAt || new Date().toISOString(),
+        })
+      );
+    } catch (error) {
+      console.warn("Unable to refresh the Founding Member count:", error);
+
+      if (!restoreCachedMemberCount()) {
+        renderMemberCount(fallbackMemberCount, "fallback");
+      }
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  renderMemberCount(fallbackMemberCount, "loading");
+  restoreCachedMemberCount();
+  updateFoundingMemberCount();
+
+  window.setInterval(() => {
+    if (!document.hidden) updateFoundingMemberCount();
+  }, 300000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) updateFoundingMemberCount();
+  });
 
   // Countdown. launchDate represents Day 1; target is 33 days later.
   const countdownValue = $("#countdown-value");
