@@ -1,6 +1,6 @@
 window.PROJECT33_CONFIG = {
   // Replace this with the permanent invite created by the Project 33 server owner.
-  discordUrl: "",
+  discordUrl: "https://discord.gg/6aAxzhkwvJ",
 
   xUrl: "https://x.com/P33Official",
 
