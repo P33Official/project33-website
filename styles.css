@@ -1297,3 +1297,30 @@ summary:focus-visible {
     padding: 28px 24px;
   }
 }
+
+
+.member-counter-status {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.member-counter-status[data-state="live"] {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.member-counter-status[data-state="cached"] {
+  color: #d6b56f;
+}
+
+.member-counter-status[data-state="error"] {
+  color: #ff6b6b;
+}
+
+@media (max-width: 640px) {
+  .member-counter-status {
+    text-align: left;
+  }
+}

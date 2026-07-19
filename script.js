@@ -59,10 +59,17 @@
   // config.currentMembers remains a safe fallback if the Worker is unavailable.
   const memberCountElement = $("#member-count");
   const memberGoalElement = $("#member-goal");
+  const memberCounterStatus = $("#member-counter-status");
   const progressFill = $("#progress-fill");
   const progress = $(".progress-track");
   const fallbackMemberCount = Math.max(0, Number(config.currentMembers) || 0);
   const memberGoal = Math.max(1, Number(config.memberGoal) || 333);
+
+  function setMemberCounterStatus(message, state = "checking") {
+    if (!memberCounterStatus) return;
+    memberCounterStatus.textContent = message;
+    memberCounterStatus.dataset.state = state;
+  }
 
   function renderMemberCount(count, source = "fallback") {
     const normalizedCount = Math.max(0, Number(count) || 0);
@@ -94,7 +101,6 @@
         "aria-label",
         `${normalizedCount.toLocaleString()} of ${memberGoal.toLocaleString()} founding members`
       );
-      progress.setAttribute("aria-busy", source === "loading" ? "true" : "false");
     }
   }
 
@@ -104,9 +110,14 @@
       if (!cachedValue) return false;
 
       const cached = JSON.parse(cachedValue);
-      if (!Number.isInteger(cached.count) || cached.count < 0) return false;
+      const cachedCount = Number(cached.count);
+      if (!Number.isInteger(cachedCount) || cachedCount < 0) return false;
 
-      renderMemberCount(cached.count, "cached");
+      renderMemberCount(cachedCount, "cached");
+      setMemberCounterStatus(
+        "Showing the last verified Discord count while live sync reconnects.",
+        "cached"
+      );
       return true;
     } catch {
       return false;
@@ -116,47 +127,74 @@
   async function updateFoundingMemberCount() {
     if (!memberCountElement) return;
 
+    setMemberCounterStatus("Checking the official Project 33 Discord…", "checking");
+
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    const requestUrl =
+      `${FOUNDING_MEMBER_ENDPOINT}?site_check=${Date.now()}`;
 
     try {
-      const response = await fetch(FOUNDING_MEMBER_ENDPOINT, {
+      const response = await fetch(requestUrl, {
         method: "GET",
         cache: "no-store",
         headers: { Accept: "application/json" },
         signal: controller.signal,
       });
 
+      const responseText = await response.text();
+      let data;
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        throw new Error(
+          `Counter returned non-JSON content (HTTP ${response.status})`
+        );
+      }
+
       if (!response.ok) {
-        throw new Error(`Counter request failed with status ${response.status}`);
+        const workerMessage =
+          typeof data.error === "string" ? `: ${data.error}` : "";
+        throw new Error(
+          `Counter request failed with HTTP ${response.status}${workerMessage}`
+        );
       }
 
-      const data = await response.json();
-      if (!Number.isInteger(data.count) || data.count < 0) {
-        throw new Error("The counter returned an invalid member count");
+      const liveCount = Number(data.count);
+      if (!Number.isInteger(liveCount) || liveCount < 0) {
+        throw new Error("The Worker response does not contain a valid count");
       }
 
-      renderMemberCount(data.count, "live");
+      renderMemberCount(liveCount, "live");
+      setMemberCounterStatus(
+        "Live count verified through the official Project 33 Discord.",
+        "live"
+      );
+
       localStorage.setItem(
         FOUNDING_MEMBER_CACHE_KEY,
         JSON.stringify({
-          count: data.count,
+          count: liveCount,
           updatedAt: data.updatedAt || new Date().toISOString(),
         })
       );
     } catch (error) {
-      console.warn("Unable to refresh the Founding Member count:", error);
+      console.error("Project 33 Founding Member counter:", error);
 
       if (!restoreCachedMemberCount()) {
         renderMemberCount(fallbackMemberCount, "fallback");
+        setMemberCounterStatus(
+          "Discord live count is currently unavailable.",
+          "error"
+        );
       }
     } finally {
       window.clearTimeout(timeout);
     }
   }
 
-  renderMemberCount(fallbackMemberCount, "loading");
-  restoreCachedMemberCount();
+  renderMemberCount(fallbackMemberCount, "fallback");
   updateFoundingMemberCount();
 
   window.setInterval(() => {
