@@ -1389,8 +1389,25 @@ summary:focus-visible {
 }
 .launch-gate-node.current,
 .launch-gate-node.threshold { border-color: rgba(255,23,38,.34); }
-.launch-gate-node > span { color: var(--red); font-size: .65rem; font-weight: 900; letter-spacing: .18em; }
-.launch-gate-node strong { display: block; margin-top: 78px; font-size: 1rem; letter-spacing: .08em; }
+.launch-gate-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 78px;
+}
+.launch-gate-label > span {
+  flex: 0 0 auto;
+  color: var(--red);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+.launch-gate-label strong {
+  display: inline;
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: .08em;
+}
 .launch-gate-node p { margin: 10px 0 0; color: var(--muted); font-size: .86rem; }
 .launch-gate-arrow { align-self: center; color: var(--red); font-size: 1.5rem; }
 .launch-gate-clarifier {
@@ -1414,5 +1431,5 @@ summary:focus-visible {
   .launch-gate-flow { grid-template-columns: 1fr; }
   .launch-gate-arrow { transform: rotate(90deg); justify-self: center; }
   .launch-gate-node { min-height: 190px; }
-  .launch-gate-node strong { margin-top: 52px; }
+  .launch-gate-label { margin-top: 52px; }
 }
