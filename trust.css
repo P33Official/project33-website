@@ -116,6 +116,19 @@
   color: var(--red);
 }
 
+.trust-page-links .trust-x-link {
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  color: #fff;
+  background: rgba(255,255,255,.035);
+}
+
+.trust-page-links .trust-x-link:hover {
+  border-color: rgba(255,255,255,.48);
+  color: #fff;
+  background: rgba(255,255,255,.075);
+}
+
 .trust-hero {
   padding: 105px 0 55px;
   border-bottom: 1px solid var(--line);

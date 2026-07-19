@@ -161,7 +161,7 @@ summary:focus-visible {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
 }
 
 .site-nav a {
@@ -176,6 +176,18 @@ summary:focus-visible {
 
 .site-nav a:hover {
   color: var(--white);
+}
+
+.site-nav .nav-social {
+  border: 1px solid rgba(255,255,255,.20);
+  padding: 10px 13px;
+  color: var(--white);
+  background: rgba(255,255,255,.035);
+}
+
+.site-nav .nav-social:hover {
+  border-color: rgba(255,255,255,.48);
+  background: rgba(255,255,255,.075);
 }
 
 .site-nav .nav-cta {
@@ -363,6 +375,16 @@ summary:focus-visible {
 .button-secondary:hover {
   border-color: rgba(255,255,255,.42);
   background: rgba(255,255,255,.06);
+}
+
+.button-x {
+  border-color: rgba(255,255,255,.28);
+  background: rgba(255,255,255,.045);
+}
+
+.button-x:hover {
+  border-color: rgba(255,255,255,.60);
+  background: rgba(255,255,255,.10);
 }
 
 .trust-row {
@@ -1175,6 +1197,11 @@ summary:focus-visible {
 
   .site-nav a:last-child {
     border-bottom: 0;
+  }
+
+  .site-nav .nav-social {
+    margin-top: 8px;
+    text-align: center;
   }
 
   .site-nav .nav-cta {
