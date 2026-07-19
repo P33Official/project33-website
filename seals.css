@@ -574,3 +574,37 @@
     padding: 25px;
   }
 }
+
+
+/* Founding 333 gate on the Seals page */
+.seals-launch-gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+  gap: 55px;
+  align-items: center;
+  margin: 20px 0 75px;
+  padding: 38px;
+  border: 1px solid rgba(255,23,38,.32);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,23,38,.12), transparent 40%),
+    rgba(255,255,255,.012);
+}
+.seals-launch-gate h2 {
+  margin: 10px 0 14px;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  line-height: .95;
+  letter-spacing: -.05em;
+}
+.seals-launch-gate-copy > p:not(.section-number) { color: var(--muted); }
+.seals-member-meter {
+  padding: 25px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.45);
+}
+.seals-member-meter .launch-gate-badge { width: 100%; }
+@media (max-width: 900px) {
+  .seals-launch-gate { grid-template-columns: 1fr; gap: 30px; }
+}
+@media (max-width: 540px) {
+  .seals-launch-gate { padding: 24px; }
+}

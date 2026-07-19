@@ -60,51 +60,89 @@
 
   // Live Founding Member count from the official Project 33 Discord.
   // config.currentMembers remains a safe fallback if the Worker is unavailable.
-  const memberCountElement = $("#member-count");
-  const memberGoalElement = $("#member-goal");
-  const memberCounterStatus = $("#member-counter-status");
-  const progressFill = $("#progress-fill");
-  const progress = $(".progress-track");
+  const uniqueElements = (...groups) => [...new Set(groups.flat())];
+  const memberCountElements = uniqueElements($$("[data-member-count]"), $$("#member-count"));
+  const memberGoalElements = uniqueElements($$("[data-member-goal]"), $$("#member-goal"));
+  const memberCounterStatusElements = uniqueElements($$("[data-member-counter-status]"), $$("#member-counter-status"));
+  const progressFillElements = uniqueElements($$("[data-progress-fill]"), $$("#progress-fill"));
+  const progressElements = uniqueElements($$("[data-progress-track]"), $$(".progress-track"));
   const fallbackMemberCount = Math.max(0, Number(config.currentMembers) || 0);
   const memberGoal = Math.max(1, Number(config.memberGoal) || 333);
 
   function setMemberCounterStatus(message, state = "checking") {
-    if (!memberCounterStatus) return;
-    memberCounterStatus.textContent = message;
-    memberCounterStatus.dataset.state = state;
+    memberCounterStatusElements.forEach((element) => {
+      element.textContent = message;
+      element.dataset.state = state;
+    });
+  }
+
+  function setTextForAll(selector, text) {
+    $$(selector).forEach((element) => { element.textContent = text; });
+  }
+
+  function updateLaunchState(count) {
+    const reached = count >= memberGoal;
+    const remaining = Math.max(0, memberGoal - count);
+    document.body.classList.toggle("launch-threshold-reached", reached);
+
+    setTextForAll("[data-launch-phase]", reached ? "LAUNCH STATE" : "PRE-LAUNCH");
+    setTextForAll("[data-launch-heading]", reached ? "LAUNCH STATE ACTIVATED" : "BUILD THE FOUNDING 333");
+    setTextForAll(
+      "[data-launch-message]",
+      reached
+        ? "The Founding 333 threshold is complete. Project 33 is now in Launch State. Official launch details and tracker activation will still be announced separately."
+        : "When the official Founding Member count reaches 333, Project 33 enters Launch State and the launch activation phase may begin."
+    );
+    setTextForAll("[data-launch-chip]", reached ? "FOUNDING 333 COMPLETE" : "FOUNDING 333 IN PROGRESS");
+    setTextForAll("[data-launch-state-badge]", reached ? "LAUNCH STATE ACTIVE" : "LAUNCH GATE LOCKED");
+    setTextForAll(
+      "[data-members-remaining]",
+      reached
+        ? `${count.toLocaleString()} FOUNDING MEMBERS // THRESHOLD COMPLETE`
+        : `${remaining.toLocaleString()} ${remaining === 1 ? "FOUNDING MEMBER" : "FOUNDING MEMBERS"} TO LAUNCH STATE`
+    );
+    setTextForAll("[data-launch-status-heading]", reached ? "Launch State active." : "Building the Founding 333.");
+    setTextForAll(
+      "[data-launch-status-message]",
+      reached
+        ? "The Founding 333 threshold has been reached. P33 is still not available until official deployment and trading details are announced through verified Project 33 channels."
+        : "P33 has not launched and is not available for purchase. Project 33 enters Launch State at 333 Founding Members, but token deployment and trading still require a separate official announcement."
+    );
   }
 
   function renderMemberCount(count, source = "fallback") {
     const normalizedCount = Math.max(0, Number(count) || 0);
     const memberPercent = Math.min(100, (normalizedCount / memberGoal) * 100);
 
-    if (memberCountElement) {
-      memberCountElement.textContent = normalizedCount.toLocaleString();
-      memberCountElement.dataset.source = source;
-      memberCountElement.title =
+    memberCountElements.forEach((element) => {
+      element.textContent = normalizedCount.toLocaleString();
+      element.dataset.source = source;
+      element.title =
         source === "live"
           ? "Live count from the official Project 33 Discord"
           : source === "cached"
             ? "Last verified count from the official Project 33 Discord"
             : "Configured fallback count";
-    }
+    });
 
-    if (memberGoalElement) {
-      memberGoalElement.textContent = memberGoal.toLocaleString();
-    }
+    memberGoalElements.forEach((element) => {
+      element.textContent = memberGoal.toLocaleString();
+    });
 
-    if (progressFill) {
-      progressFill.style.width = `${memberPercent}%`;
-    }
+    progressFillElements.forEach((element) => {
+      element.style.width = `${memberPercent}%`;
+    });
 
-    if (progress) {
-      progress.setAttribute("aria-valuemax", String(memberGoal));
-      progress.setAttribute("aria-valuenow", String(normalizedCount));
-      progress.setAttribute(
+    progressElements.forEach((element) => {
+      element.setAttribute("aria-valuemax", String(memberGoal));
+      element.setAttribute("aria-valuenow", String(normalizedCount));
+      element.setAttribute(
         "aria-label",
         `${normalizedCount.toLocaleString()} of ${memberGoal.toLocaleString()} founding members`
       );
-    }
+    });
+
+    updateLaunchState(normalizedCount);
   }
 
   function restoreCachedMemberCount() {
@@ -128,7 +166,7 @@
   }
 
   async function updateFoundingMemberCount() {
-    if (!memberCountElement) return;
+    if (!memberCountElements.length) return;
 
     setMemberCounterStatus("Checking the official Project 33 Discord…", "checking");
 
@@ -197,16 +235,18 @@
     }
   }
 
-  renderMemberCount(fallbackMemberCount, "fallback");
-  updateFoundingMemberCount();
+  if (memberCountElements.length) {
+    renderMemberCount(fallbackMemberCount, "fallback");
+    updateFoundingMemberCount();
 
-  window.setInterval(() => {
-    if (!document.hidden) updateFoundingMemberCount();
-  }, 300000);
+    window.setInterval(() => {
+      if (!document.hidden) updateFoundingMemberCount();
+    }, 300000);
 
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) updateFoundingMemberCount();
-  });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) updateFoundingMemberCount();
+    });
+  }
 
 
   // Header and mobile menu
@@ -253,5 +293,6 @@
     revealItems.forEach((item) => item.classList.add("visible"));
   }
 
-  $("#year").textContent = new Date().getFullYear();
+  const yearElement = $("#year");
+  if (yearElement) yearElement.textContent = new Date().getFullYear();
 })();
