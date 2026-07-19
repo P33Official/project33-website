@@ -59,3 +59,15 @@ It can be hosted on any service that supports static HTML, CSS, and JavaScript. 
 4. Confirm token details and risk language with qualified legal counsel before launch.
 5. Test the website on a phone and desktop.
 6. Publish the same official contract address on the website, X, and Discord.
+
+## Five Seals update
+
+This version adds:
+
+- A homepage explanation of the P33 five-seal mystery
+- A shareable `seals.html` community guide
+- The automated 33-second verification rules
+- Plain-language descriptions of all five reveals
+- FAQ, risk context, navigation, sitemap, and transparency-log updates
+
+The website does not yet connect to the Milestone Engine. Live market-cap and countdown integration belongs to the next deployment phase.
