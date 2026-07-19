@@ -51,9 +51,12 @@
   }
 
   // Configurable token status
-  $("#network-value").textContent = config.network || "TO BE ANNOUNCED";
-  $("#supply-value").textContent = config.totalSupply || "TO BE ANNOUNCED";
-  $("#contract-value").textContent = config.contractAddress || "NOT DEPLOYED";
+  const networkValue = $("#network-value");
+  const supplyValue = $("#supply-value");
+  const contractValue = $("#contract-value");
+  if (networkValue) networkValue.textContent = config.network || "TO BE ANNOUNCED";
+  if (supplyValue) supplyValue.textContent = config.totalSupply || "TO BE ANNOUNCED";
+  if (contractValue) contractValue.textContent = config.contractAddress || "NOT DEPLOYED";
 
   // Live Founding Member count from the official Project 33 Discord.
   // config.currentMembers remains a safe fallback if the Worker is unavailable.
@@ -205,59 +208,6 @@
     if (!document.hidden) updateFoundingMemberCount();
   });
 
-  // Countdown. launchDate represents Day 1; target is 33 days later.
-  const countdownValue = $("#countdown-value");
-  const countdownLabel = $("#countdown-label");
-  let countdownInterval;
-
-  function renderCountdown() {
-    if (!config.launchDate) {
-      countdownValue.textContent = "NOT STARTED";
-      countdownLabel.textContent = "DAY 00 OF 33";
-      return;
-    }
-
-    const start = new Date(config.launchDate);
-    if (Number.isNaN(start.getTime())) {
-      countdownValue.textContent = "DATE ERROR";
-      countdownLabel.textContent = "CHECK CONFIG.JS";
-      return;
-    }
-
-    const now = new Date();
-    const end = new Date(start.getTime() + 33 * 24 * 60 * 60 * 1000);
-    const elapsed = now.getTime() - start.getTime();
-    const remaining = end.getTime() - now.getTime();
-
-    if (elapsed < 0) {
-      const untilStart = start.getTime() - now.getTime();
-      const days = Math.floor(untilStart / 86400000);
-      const hours = Math.floor((untilStart % 86400000) / 3600000);
-      const minutes = Math.floor((untilStart % 3600000) / 60000);
-      countdownValue.textContent = `${String(days).padStart(2, "0")}D ${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M`;
-      countdownLabel.textContent = "COUNTDOWN BEGINS SOON";
-      return;
-    }
-
-    if (remaining <= 0) {
-      countdownValue.textContent = "DAY 33";
-      countdownLabel.textContent = "LAUNCH PHASE";
-      return;
-    }
-
-    const day = Math.min(33, Math.floor(elapsed / 86400000) + 1);
-    const days = Math.floor(remaining / 86400000);
-    const hours = Math.floor((remaining % 86400000) / 3600000);
-    const minutes = Math.floor((remaining % 3600000) / 60000);
-    const seconds = Math.floor((remaining % 60000) / 1000);
-
-    countdownValue.textContent =
-      `${String(days).padStart(2, "0")}D ${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
-    countdownLabel.textContent = `DAY ${String(day).padStart(2, "0")} OF 33`;
-  }
-
-  renderCountdown();
-  countdownInterval = setInterval(renderCountdown, 1000);
 
   // Header and mobile menu
   const header = $(".site-header");
